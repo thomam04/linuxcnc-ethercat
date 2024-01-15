@@ -17,20 +17,20 @@
 //
 
 #include "../lcec.h"
-#include "lcec_deasda.h"
+#include "lcec_deasda3.h"
 
 #include "lcec_class_enc.h"
 
 static int lcec_deasda_init(int comp_id, struct lcec_slave *slave, ec_pdo_entry_reg_t *pdo_entry_regs);
 
 static lcec_typelist_t types[]={
-  { "DeASDA", LCEC_DELTA_VID, 0x10305070, LCEC_DEASDA_PDOS, 0, NULL, lcec_deasda_init},
+  { "DeASDA3", LCEC_DELTA_VID, 0x00006010, LCEC_DEASDA_PDOS, 0, NULL, lcec_deasda_init},
   { NULL },
 };
 
 ADD_TYPES(types);
 
-#define DEASDA_PULSES_PER_REV_DEFLT (1280000)
+#define DEASDA_PULSES_PER_REV_DEFLT (16777216)
 #define DEASDA_RPM_FACTOR           (0.1)
 #define DEASDA_RPM_RCPT             (1.0 / DEASDA_RPM_FACTOR)
 #define DEASDA_RPM_MUL              (60.0)
