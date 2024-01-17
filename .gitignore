@@ -10,6 +10,7 @@
 **.ver
 **.tmp
 **.a
+**.DS_Store
 
 # Dependency files
 **.d
