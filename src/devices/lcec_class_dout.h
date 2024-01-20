@@ -1,5 +1,5 @@
 //
-//    Copyright (C) 2011 Sascha Ittner <sascha.ittner@modusoft.de>
+//    Copyright (C) 2024 Scott Laird <scott@sigkill.org>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -15,14 +15,25 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
-#ifndef _LCEC_EP23XX_H_
-#define _LCEC_EP23XX_H_
+
+/// @file
+/// @brief Library for digital output devices
 
 #include "../lcec.h"
 
-#define LCEC_EP2308_PDOS 8   // Can be in or out on each port, so 2 PDOs per port.
-#define LCEC_EP2318_PDOS 8   // Can be in or out on each port, so 2 PDOs per port.
-#define LCEC_EP2328_PDOS 8   // Can be in or out on each port, so 2 PDOs per port.
-#define LCEC_EP2338_PDOS 16  // Can be in or out on each port, so 2 PDOs per port.
-#define LCEC_EP2349_PDOS 32  // Can be in or out on each port, so 2 PDOs per port.
-#endif
+typedef struct {
+  hal_bit_t *out;
+  hal_bit_t invert;
+  unsigned int pdo_os, pdo_bp;
+} lcec_class_dout_pin_t;
+
+typedef struct {
+  int count;
+  lcec_class_dout_pin_t **pins;
+} lcec_class_dout_pins_t;
+
+lcec_class_dout_pins_t *lcec_dout_allocate_pins(int count);
+lcec_class_dout_pin_t *lcec_dout_register_pin(
+    ec_pdo_entry_reg_t **pdo_entry_regs, struct lcec_slave *slave, int id, uint16_t idx, uint16_t sidx);
+void lcec_dout_write(struct lcec_slave *slave, lcec_class_dout_pin_t *data);
+void lcec_dout_write_all(struct lcec_slave *slave, lcec_class_dout_pins_t *pins);

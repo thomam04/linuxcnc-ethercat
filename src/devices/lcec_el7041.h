@@ -16,13 +16,17 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
+
+/// @file
+/// @brief Driver for Beckhoff EL7041 Stepper drives
+
 #ifndef _LCEC_EL7041_H_
 #define _LCEC_EL7041_H_
 
 #include "../lcec.h"
 
-#define LCEC_EL7041_PDOS 34
+#define LCEC_EL7041_PDOS      34
 #define LCEC_EL7041_1000_PDOS 34
-#define LCEC_EP7041_PDOS 34
+#define LCEC_EP7041_PDOS      34
 
 #endif

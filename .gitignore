@@ -21,6 +21,7 @@
 **/modules.order
 config.mk
 src/lcec_conf
+src/lcec_devices
 src/Module.symvers
 
 # debian pkgbuild files
