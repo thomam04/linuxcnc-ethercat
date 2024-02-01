@@ -158,4 +158,3 @@ static void lcec_el31x2_read(struct lcec_slave *slave, long period) {
     *(chan->val) = *(chan->bias) + *(chan->scale) * (double)value * ((double)1/(double)0x7fff);
   }
 }
-

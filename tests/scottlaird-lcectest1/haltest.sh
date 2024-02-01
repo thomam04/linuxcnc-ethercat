@@ -1,107 +1,9 @@
-bg
 #!/bin/bash
 
-update() {
-    halcmd show > $OUT
-}
+OUT=/tmp/testbench-1.out
 
-set-pin() {
-    var="lcec.0.$1.$2"
-    halcmd setp $var $3
-    sleep 0.1
-    update
-}
-
-test-pin-exists() {
-    var="lcec.0.$1.$2"
-    if ! egrep " +$var$" $OUT > /dev/null; then
-	echo "ERROR: $var does not exist"
-	halrun -U
-	exit 1
-    fi
-}
-
-
-test-pin-notexists() {
-    var="lcec.0.$1.$2"
-    if egrep " +$var$" $OUT > /dev/null; then
-	echo "ERROR: $var exists but should not"
-	halrun -U
-	exit 1
-    fi
-}
-
-
-test-pin-true() {
-    var="lcec.0.$1.$2"
-    if ! egrep "TRUE +$var$" $OUT > /dev/null; then
-	echo "ERROR: $var is not true"
-	halrun -U
-	exit 1
-    fi
-}
-
-test-pin-false() {
-    var="lcec.0.$1.$2"
-    if ! egrep "FALSE +$var$" $OUT > /dev/null; then
-	echo "ERROR: $var is not true"
-	halrun -U
-	exit 1
-    fi
-}
-
-test-pin-greater() {
-    var="lcec.0.$1.$2"
-    val=$(halcmd getp $var)
-    result=$(echo "$val > $3" | bc -l)
-    if [ $result == 0 ]; then
-	echo "ERROR: $var ($val) is not greater than $3"
-	halrun -U
-	exit 1
-    fi
-}
-
-test-pin-less() {
-    var="lcec.0.$1.$2"
-    val=$(halcmd getp $var)
-    result=$(echo "$val < $3" | bc -l)
-    if [ $result == 0 ]; then
-	echo "ERROR: $var ($val) is not less than $3"
-	halrun -U
-	exit 1
-    fi
-}
-
-test-pin-count() {
-    var=" lcec\.0\.$1"
-    pincount=$(egrep " +$var\." $OUT | wc -l)
-    if [ $pincount -ne $2 ]; then
-	echo "ERROR: slave $1 has $pincount pins, expected $2"
-	halrun -U
-	exit 1
-    fi
-}
-
-test-all-din-false() {
-    if grep 'TRUE  lcec.0.D[0-9]+.din-[0-9]+$' $OUT ; then
-	echo "ERROR: some digital input pins are already true"
-	halrun -U; exit 1
-    fi
-}
-
-test-all-din-true-count() {
-    val=$1
-    if [ $(egrep 'TRUE  lcec.0\.D[0-9]+\.din-[0-9]+$' $OUT | wc -l) != $val ]; then
-	echo "ERROR: too many 'true' pins, that should have only flipped $val bit(s)."
-	halrun -U; exit 1
-    fi
-}
-
-
-test-slave-oper() {
-    test-pin-true $1 slave-oper
-}
-
+# Load assorted test functions.
+source $(dirname "$0")/../shlib/haltests.sh
 
 echo "*** Test #1: invalid device type in XML"
 echo "=== Killing old halrun"
@@ -130,7 +32,6 @@ halrun -f test2.hal > /tmp/testbench-init.out &
 echo "... Sleeping for 3s to allow ethercat to finish initializing"
 sleep 3 # let ethercat states settle
 
-OUT=/tmp/testbench-1.out
 update
 
 echo "=== Testing for failed devices"
@@ -208,7 +109,6 @@ test-slave-oper D10
 test-pin-exists D10 ain-7-val
 test-pin-notexists D10 ain-7-sync-err
 test-pin-count D10 62
-test-pin-greater D10 ain-0-val 0.1
 
 #echo "=== Testing initial config of D11 (EL6001)"
 #if ! grep 'lcec.0.D11.dout-7' $OUT > /dev/null; then
@@ -259,8 +159,17 @@ test-pin-exists D19 aout-1-value
 test-pin-exists D19 aout-1-min-dc
 test-pin-count D19 28
 
-echo "... Testing initial config of D20 (EK1101)"
+echo "... Testing initial config of D20 (EL7041)"
 test-slave-oper D20
+
+echo "... Testing initial config of D21 (EK1110)"
+test-slave-oper D21
+
+echo "... Testing initial config of D22 (EP2308)"
+test-slave-oper D22
+test-pin-exists D22 din-0
+test-pin-exists D22 dout-1
+test-pin-count D22 22
 
 echo "=== Initial config tests pass"
 
@@ -318,6 +227,9 @@ test-all-din-false
 
 
 echo "=== Testing Analog I/O"
+echo "... Checking D10 current input"
+test-pin-greater D10 ain-0-val 0.1
+
 echo "... Checking D15 power measurements"
 test-pin-greater D15 l0.frequency 59
 test-pin-less D15 l0.frequency 61
@@ -342,6 +254,18 @@ set-pin D19 aout-0-enable 1
 test-pin-greater D10 ain-1-val 0.99
 set-pin D19 aout-0-value 0
 test-pin-less D10 ain-1-val 0.01
+
+
+echo "=== Testing Steppers"
+set-pin D20 enc-reset true
+set-pin D20 enc-reset false
+test-pin-equal D20 enc-pos 0
+set-pin D20 srv-enable true
+set-pin D20 srv-cmd 0.1
+sleep 0.5  # Let the servo move a bit.
+set-pin D20 srv-cmd 0
+update
+test-pin-greater D20 enc-pos 7000  # Currently hitting ~7500.
 
 echo "=== ALL TESTS PASS ==="
 halrun -U -Q
